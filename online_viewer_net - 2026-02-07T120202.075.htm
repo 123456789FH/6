@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <base href="." />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>حاسبة الكسور المبدعة</title>
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg,#a1c4fd 0%,#c2e9fb 100%);
+      direction: rtl;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .calculator{
+      max-width: 720px;
+      margin: 20px auto;
+      padding: 30px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      transform-style: preserve-3d;
+      transition: transform 0.3s ease;
+      position: relative;
+    }
+    .calculator:hover{ transform: translateY(-5px); }
+
+    h1{
+      color:#2c3e50;
+      text-align:center;
+      margin-bottom: 18px;
+      font-size: 2.35em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      animation: titleFloat 3s ease-in-out infinite;
+    }
+    @keyframes titleFloat{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-10px); }
+    }
+
+    .fraction-input{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap: 18px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .fracBox{
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      gap: 8px;
+    }
+
+    input{
+      width: 96px;
+      padding: 10px;
+      text-align:center;
+      border: 3px solid #3498db;
+      border-radius: 10px;
+      font-size: 1.15em;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.9);
+    }
+    input:focus{
+      outline: none;
+      border-color: #2ecc71;
+      box-shadow: 0 0 15px rgba(46,204,113,0.3);
+      transform: scale(1.05);
+    }
+
+    .fraction-line{
+      width: 90px;
+      height: 3px;
+      background: linear-gradient(90deg,#3498db,#2ecc71);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    select{
+      padding: 10px 12px;
+      font-size: 1.45em;
+      border: 3px solid #3498db;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 92px;
+      text-align: center;
+    }
+    select:hover{ transform: scale(1.08); }
+
+    .actions{
+      text-align: center;
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button{
+      background: linear-gradient(45deg,#3498db,#2ecc71);
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.02em;
+      transition: all 0.3s ease;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+      min-width: 140px;
+    }
+    button:hover{
+      transform: scale(1.06);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    button.secondary{
+      background: linear-gradient(45deg,#6c7a89,#95a5a6);
+    }
+
+    button:disabled{
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+      filter: grayscale(0.2);
+    }
+
+    .hint{
+      text-align:center;
+      color:#34495e;
+      margin-top: 10px;
+      font-size: 0.98em;
+      opacity: 0.9;
+    }
+
+    .result{
+      text-align:center;
+      margin-top: 16px;
+      font-size: 1.12em;
+      color:#2c3e50;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.85);
+      transition: all 0.3s ease;
+      min-height: 54px;
+    }
+    .result.active{ animation: popIn 0.45s ease-out; }
+    @keyframes popIn{
+      0%{ transform: scale(0.92); opacity: 0; }
+      100%{ transform: scale(1); opacity: 1; }
+    }
+
+    .prettyFrac{
+      display:inline-flex;
+      flex-direction: column;
+      align-items:center;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(161,196,253,0.25);
+      border: 1px solid rgba(52,152,219,0.25);
+      min-width: 90px;
+      margin: 0 6px;
+    }
+    .prettyFrac .top, .prettyFrac .bottom{
+      font-size: 1.25em;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .prettyFrac .bar{
+      width: 100%;
+      height: 3px;
+      margin: 6px 0;
+      border-radius: 3px;
+      background: linear-gradient(90deg,#3498db,#2ecc71);
+    }
+
+    details.steps{
+      margin-top: 14px;
+      background: rgba(255,255,255,0.85);
+      border-radius: 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(44,62,80,0.12);
+      text-align: right;
+    }
+    details.steps summary{
+      cursor: pointer;
+      font-weight: 700;
+      color: #2c3e50;
+      list-style: none;
+    }
+    details.steps summary::-webkit-details-marker{ display:none; }
+    .stepsContent{
+      margin-top: 10px;
+      font-size: 1.02em;
+      line-height: 1.9;
+      color: #34495e;
+    }
+    .stepsContent .line{
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(52,152,219,0.08);
+      margin: 6px 0;
+    }
+
+    .teacher-credit{
+      text-align:center;
+      margin-top: 18px;
+      font-size: 1.1em;
+      color:#34495e;
+      padding: 12px;
+      background: rgba(255,255,255,0.85);
+      border-radius: 12px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    .teacher-credit span{
+      color:#e74c3c;
+      font-weight: 800;
+    }
+    @keyframes fadeIn{
+      from{ opacity:0; transform: translateY(10px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(44,62,80,0.92);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.98em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 9999;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+      max-width: 92vw;
+      text-align: center;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="calculator">
+    <h1>حاسبة الكسور المبدعة</h1>
+
+    <div class="fraction-input">
+      <div class="fracBox">
+        <input type="number" id="num1" placeholder="البسط" inputmode="numeric" aria-label="بسط الكسر الأول">
+        <div class="fraction-line"></div>
+        <input type="number" id="den1" placeholder="المقام" inputmode="numeric" aria-label="مقام الكسر الأول">
+      </div>
+
+      <select id="operation" aria-label="العملية">
+        <option value="+">+</option>
+        <option value="-">−</option>
+        <option value="*">×</option>
+        <option value="/">÷</option>
+      </select>
+
+      <div class="fracBox">
+        <input type="number" id="num2" placeholder="البسط" inputmode="numeric" aria-label="بسط الكسر الثاني">
+        <div class="fraction-line"></div>
+        <input type="number" id="den2" placeholder="المقام" inputmode="numeric" aria-label="مقام الكسر الثاني">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="calcBtn" onclick="calculateFraction()">احسب</button>
+      <button class="secondary" onclick="clearInputs()">مسح</button>
+      <button onclick="generateRandomExample()">مثال عشوائي</button>
+      <button id="copyBtn" class="secondary" onclick="copyResult()" disabled>نسخ الناتج</button>
+    </div>
+
+    <div class="hint">💡 تلميح: اضغط Enter للحساب بسرعة</div>
+
+    <div class="result" id="result"></div>
+
+    <details class="steps" id="stepsBox" style="display:none;">
+      <summary>عرض خطوات الحل</summary>
+      <div class="stepsContent" id="steps"></div>
+    </details>
+
+    <div class="teacher-credit">
+      إعداد المعلمة: <span>فاطمة هزازي</span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+<script>
+/* ===== أدوات مساعدة ===== */
+function toArabicDigits(text) {
+  const map = {'0':'٠','1':'١','2':'٢','3':'٣','4':'٤','5':'٥','6':'٦','7':'٧','8':'٨','9':'٩','-':'−'};
+  return String(text).replace(/[0-9-]/g, ch => map[ch] ?? ch);
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => t.classList.remove('show'), 1400);
+}
+
+function gcd(a, b){
+  a = Math.abs(a); b = Math.abs(b);
+  while(b){
+    const t = b;
+    b = a % b;
+    a = t;
+  }
+  return a || 1;
+}
+
+function lcm(a, b){
+  a = Math.abs(a); b = Math.abs(b);
+  return (a / gcd(a,b)) * b; // آمن مع أعداد معقولة
+}
+
+function normalizeFraction(n, d){
+  if(d < 0){ n = -n; d = -d; }
+  return { n, d };
+}
+
+function simplifyFraction(n, d){
+  const norm = normalizeFraction(n, d);
+  n = norm.n; d = norm.d;
+  const div = gcd(n, d);
+  return { n: n/div, d: d/div, g: div };
+}
+
+function readInt(id){
+  const v = document.getElementById(id).value.trim();
+  if(v === "") return null;
+  const n = Number(v);
+  if(!Number.isFinite(n) || !Number.isInteger(n)) return NaN;
+  return n;
+}
+
+function opSymbol(op){
+  return op === '+' ? '+' : op === '-' ? '−' : op === '*' ? '×' : '÷';
+}
+
+function prettyFractionHTML(n, d){
+  return `
+    <span class="prettyFrac" aria-label="كسر">
+      <span class="top">${toArabicDigits(n)}</span>
+      <span class="bar"></span>
+      <span class="bottom">${toArabicDigits(d)}</span>
+    </span>
+  `;
+}
+
+function toMixedNumber(n, d){
+  if(d === 1) return null;
+  if(n === 0) return { whole: 0, r: 0, d: 1 };
+  const sign = n < 0 ? -1 : 1;
+  n = Math.abs(n);
+  const whole = Math.floor(n / d);
+  const r = n % d;
+  if(whole === 0 || r === 0) return null;
+  return { whole: whole * sign, r, d };
+}
+
+/* ===== حالة النسخ ===== */
+let lastResult = null;
+
+function setCopyEnabled(enabled){
+  const btn = document.getElementById('copyBtn');
+  btn.disabled = !enabled;
+}
+
+function setResult(html, stepsHtml, resultObj){
+  // resultObj = { n, d, mixed }
+  lastResult = resultObj || null;
+  setCopyEnabled(!!lastResult);
+
+  const resultDiv = document.getElementById('result');
+  resultDiv.className = "result";
+  setTimeout(() => {
+    resultDiv.className = "result active";
+    resultDiv.innerHTML = html || "";
+  }, 10);
+
+  const stepsBox = document.getElementById('stepsBox');
+  const stepsDiv = document.getElementById('steps');
+  if(stepsHtml){
+    stepsDiv.innerHTML = stepsHtml;
+    stepsBox.style.display = "block";
+  } else {
+    stepsDiv.innerHTML = "";
+    stepsBox.style.display = "none";
+    stepsBox.open = false;
+  }
+}
+
+/* ===== الحساب ===== */
+function calculateFraction(){
+  let num1 = readInt('num1');
+  let den1 = readInt('den1');
+  let num2 = readInt('num2');
+  let den2 = readInt('den2');
+  const operation = document.getElementById('operation').value;
+
+  if(num1 === null || den1 === null || num2 === null || den2 === null){
+    setResult("الرجاء إدخال جميع الأرقام ✅", null, null);
+    return;
+  }
+  if(Number.isNaN(num1) || Number.isNaN(den1) || Number.isNaN(num2) || Number.isNaN(den2)){
+    setResult("الرجاء إدخال أعداد صحيحة فقط ✨", null, null);
+    return;
+  }
+  if(den1 === 0 || den2 === 0){
+    setResult("لا يمكن أن يكون المقام صفرًا ❌", null, null);
+    return;
+  }
+  if(operation === '/' && num2 === 0){
+    setResult("لا يمكن القسمة على كسر بسطه صفر ❌", null, null);
+    return;
+  }
+
+  // طبع المقامات موجبة
+  ({n:num1, d:den1} = normalizeFraction(num1, den1));
+  ({n:num2, d:den2} = normalizeFraction(num2, den2));
+
+  let rawN = 0, rawD = 1;
+  let steps = [];
+
+  steps.push(`<div class="line">الكسر الأول: ${prettyFractionHTML(num1, den1)} &nbsp; ${opSymbol(operation)} &nbsp; الكسر الثاني: ${prettyFractionHTML(num2, den2)}</div>`);
+
+  if(operation === '+' || operation === '-'){
+    // ✅ استخدام LCM بدل ضرب المقامين دائمًا
+    const commonD = lcm(den1, den2);
+    const m1 = commonD / den1;
+    const m2 = commonD / den2;
+
+    const adjN1 = num1 * m1;
+    const adjN2 = num2 * m2;
+
+    rawN = (operation === '+') ? (adjN1 + adjN2) : (adjN1 - adjN2);
+    rawD = commonD;
+
+    steps.push(`<div class="line">المضاعف المشترك الأصغر (LCM) للمقامين: LCM(${toArabicDigits(den1)}, ${toArabicDigits(den2)}) = <b>${toArabicDigits(commonD)}</b></div>`);
+    steps.push(`<div class="line">نحوّل الكسرين إلى مقام ${toArabicDigits(commonD)}: نضرب الأول في <b>${toArabicDigits(m1)}</b> والثاني في <b>${toArabicDigits(m2)}</b></div>`);
+    steps.push(`<div class="line">البسطان بعد التحويل: <b>${toArabicDigits(adjN1)}</b> و <b>${toArabicDigits(adjN2)}</b></div>`);
+    steps.push(`<div class="line">الناتج قبل التبسيط: ${toArabicDigits(rawN)}/${toArabicDigits(rawD)}</div>`);
+  }
+  else if(operation === '*'){
+    rawN = num1 * num2;
+    rawD = den1 * den2;
+    steps.push(`<div class="line">الضرب: البسط = ${toArabicDigits(num1)}×${toArabicDigits(num2)} = <b>${toArabicDigits(rawN)}</b> ، المقام = ${toArabicDigits(den1)}×${toArabicDigits(den2)} = <b>${toArabicDigits(rawD)}</b></div>`);
+    steps.push(`<div class="line">الناتج قبل التبسيط: ${toArabicDigits(rawN)}/${toArabicDigits(rawD)}</div>`);
+  }
+  else if(operation === '/'){
+    // (a/b) ÷ (c/d) = (a/b) × (d/c)
+    rawN = num1 * den2;
+    rawD = den1 * num2;
+    steps.push(`<div class="line">القسمة: نقلب الكسر الثاني ثم نضرب: ${prettyFractionHTML(num1, den1)} × ${prettyFractionHTML(den2, num2)}</div>`);
+    steps.push(`<div class="line">البسط = ${toArabicDigits(num1)}×${toArabicDigits(den2)} = <b>${toArabicDigits(rawN)}</b> ، المقام = ${toArabicDigits(den1)}×${toArabicDigits(num2)} = <b>${toArabicDigits(rawD)}</b></div>`);
+    steps.push(`<div class="line">الناتج قبل التبسيط: ${toArabicDigits(rawN)}/${toArabicDigits(rawD)}</div>`);
+  }
+
+  if(rawD === 0){
+    setResult("حدث خطأ في الحساب (المقام أصبح صفرًا) ❌", null, null);
+    return;
+  }
+
+  const simplified = simplifyFraction(rawN, rawD);
+
+  steps.push(`<div class="line">القاسم المشترك الأكبر (GCD) = <b>${toArabicDigits(simplified.g)}</b> ⇒ نبسّط الكسر.</div>`);
+  steps.push(`<div class="line">الناتج بعد التبسيط: ${prettyFractionHTML(simplified.n, simplified.d)}</div>`);
+
+  const mixed = toMixedNumber(simplified.n, simplified.d);
+  if(mixed){
+    steps.push(`<div class="line">كعدد كسري: <b>${toArabicDigits(mixed.whole)}</b> و ${prettyFractionHTML(mixed.r, mixed.d)}</div>`);
+  }
+
+  const finalHTML = `
+    <div style="margin-bottom:10px;">الناتج المبسّط:</div>
+    ${prettyFractionHTML(simplified.n, simplified.d)}
+    ${mixed ? `<div style="margin-top:10px; font-size:1.05em;">كعدد كسري: <b>${toArabicDigits(mixed.whole)}</b> و ${prettyFractionHTML(mixed.r, mixed.d)}</div>` : ""}
+  `;
+
+  setResult(finalHTML, steps.join(""), { n: simplified.n, d: simplified.d, mixed: mixed || null });
+}
+
+/* ===== النسخ ===== */
+function copyResult(){
+  if(!lastResult){
+    toast("لا يوجد ناتج لنسخه");
+    return;
+  }
+
+  const { n, d, mixed } = lastResult;
+
+  const plainFrac = `${n}/${d}`;
+  const arabFrac  = `${toArabicDigits(n)}/${toArabicDigits(d)}`;
+
+  let text = `الناتج: ${plainFrac} (${arabFrac})`;
+
+  if(mixed){
+    const plainMixed = `${mixed.whole} ${mixed.r}/${mixed.d}`;
+    const arabMixed  = `${toArabicDigits(mixed.whole)} ${toArabicDigits(mixed.r)}/${toArabicDigits(mixed.d)}`;
+    text += `\nكعدد كسري: ${plainMixed} (${arabMixed})`;
+  }
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text)
+      .then(() => toast("تم النسخ ✅"))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{
+    document.execCommand('copy');
+    toast("تم النسخ ✅");
+  }catch(e){
+    toast("لم يتم النسخ تلقائيًا");
+    prompt("انسخ النص يدويًا:", text);
+  }
+  document.body.removeChild(ta);
+}
+
+/* ===== مثال عشوائي ===== */
+function randInt(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateRandomExample(){
+  const ops = ['+','-','*','/'];
+  const op = ops[randInt(0, ops.length - 1)];
+
+  let n1 = randInt(0, 9);
+  let d1 = randInt(1, 12);
+  let n2 = randInt(0, 9);
+  let d2 = randInt(1, 12);
+
+  // في القسمة: لا نسمح بكسر بسطه صفر
+  if(op === '/' && n2 === 0) n2 = randInt(1, 9);
+
+  document.getElementById('num1').value = n1;
+  document.getElementById('den1').value = d1;
+  document.getElementById('num2').value = n2;
+  document.getElementById('den2').value = d2;
+  document.getElementById('operation').value = op;
+
+  calculateFraction();
+}
+
+/* ===== مسح ===== */
+function clearInputs(){
+  ['num1','den1','num2','den2'].forEach(id => document.getElementById(id).value = '');
+  setResult("", null, null);
+}
+
+/* ===== تحسينات تفاعلية ===== */
+document.querySelectorAll('input').forEach(input => {
+  input.addEventListener('focus', function(){
+    const line = this.parentElement.querySelector('.fraction-line');
+    if(line) line.style.width = '106px';
+  });
+  input.addEventListener('blur', function(){
+    const line = this.parentElement.querySelector('.fraction-line');
+    if(line) line.style.width = '90px';
+  });
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    calculateFraction();
+  }
+});
+</script>
+
+</body>
+</html>
